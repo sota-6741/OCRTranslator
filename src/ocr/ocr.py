@@ -7,8 +7,7 @@ class OCR():
     """
     画像からテキストを抽出するためのOCRユーティリティクラス
 
-    前処理（グレースケール化や階調変換など）を行った後，
-    pytesseractを用いて画像から文字認識を実施します
+    前処理を行った後，pytesseractを用いて画像から文字認識を実施します
 
     主なメソッド:
         - 画像から文字を抽出
@@ -63,8 +62,8 @@ class PreProcessor():
 
         Args:
             image (np.ndarray): 入力画像
-            alpha (float): LUTのアルファ値
-            beta (float): LUTのベータ値
+            alpha (float): コントラスト調整係数 (default: 1)
+            beta (float): 明るさ調整係数 (default: 1)
 
         Returns:
             np.ndarray: 階調変換後の画像(NupPy配列)
