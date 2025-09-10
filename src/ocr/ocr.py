@@ -1,7 +1,8 @@
+from typing import Callable, List, Dict, Any
 import pytesseract
 import numpy as np
+import time
 import cv2
-from PIL import Image
 
 from src.image_manager.image_manager import ImageConverter
 
@@ -14,9 +15,23 @@ class OCR():
     主なメソッド:
         - 画像から文字を抽出
     """
+    def __init__(self, image: np.ndarray):
+        self.input_image = image
 
-    @staticmethod
-    def read_text(image: np.ndarray) -> str:
+        # 画像の前処理
+        pipeline = Pipeline()
+
+        pipeline.add_step("grayscale", PreProcessor.apply_grayscale)
+        pipeline.add_step("LIT", PreProcessor.apply_lit)
+        pipeline.add_step("convert_cv2_to_pil", ImageConverter.convert_cv2_to_pil)
+
+        self.processed_image, self.log = pipeline.execute(self.input_image)
+
+        self.extracted_text = self.read_text()
+
+
+
+    def read_text(self) -> str:
         """画像から文字を抽出するメソッド
 
         Args:
@@ -26,18 +41,7 @@ class OCR():
             str: 画像から抽出されたテキスト
         """
 
-        # imageの前処理
-        pipeline = [
-            PreProcessor.apply_grayscale,
-            PreProcessor.apply_lit,
-            ImageConverter.convert_cv2_to_pil
-        ]
-
-        pre_processed_image = image
-        for func in pipeline:
-            pre_processed_image = func(pre_processed_image)
-
-        return pytesseract.image_to_string(pre_processed_image, lang="eng")
+        return pytesseract.image_to_string(self.processed_image, lang="eng")
 
 class PreProcessor():
     """
@@ -77,3 +81,33 @@ class PreProcessor():
         look_up_table = np.clip(look_up_table, 0, 255).astype(np.uint8)
 
         return cv2.LUT(image, look_up_table)
+
+class Pipeline:
+    def __init__(self):
+        self.steps: List[Dict[str, Any]] = []
+
+    def add_step(self, name: str, function: Callable):
+        self.steps.append({"name": name, "function": function})
+
+    def execute(self, image: np.ndarray):
+
+        log = []
+        current_image = image.copy()
+
+        for step in self.steps:
+            t0 = time.time()
+            try:
+                current_image = step["function"](current_image)
+                log.append({
+                    "step": step["name"],
+                    "status": "success",
+                    "time": time.time() - t0
+                })
+            except Exception as e:
+                log.append({
+                    "step": step["name"],
+                    "status": "failed",
+                    "error": str(e)
+                })
+                break
+        return current_image, log
