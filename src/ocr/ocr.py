@@ -65,7 +65,7 @@ class PreProcessor():
         Args:
             image (np.ndarray): 入力画像
             alpha (float): コントラスト調整係数 (default: 1)
-            beta (float): 明るさ調整係数 (default: 1)
+            beta (float): 明るさ調整係数 (default: 0)
 
         Returns:
             np.ndarray: 階調変換後の画像(NupPy配列)
