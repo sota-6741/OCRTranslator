@@ -1,4 +1,5 @@
 from typing import Callable, List, Dict, Any
+from abc import ABC, abstractmethod
 import pytesseract
 import numpy as np
 import time
