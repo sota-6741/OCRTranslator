@@ -20,6 +20,7 @@ class IOCR(ABC):
         """抽出結果をプロパティで取得"""
         pass
 
+class TesseractOCR(IOCR):
     """
     画像からテキストを抽出するためのOCRユーティリティクラス
 
@@ -40,8 +41,11 @@ class IOCR(ABC):
 
         self.processed_image, self.log = pipeline.execute(self.input_image)
 
-        self.extracted_text = self.read_text()
+        self._extracted_text: str = self.read_text()
 
+        @property
+        def extract_text(self) -> str:
+            return self._extracted_text
 
 
     def read_text(self) -> str:
