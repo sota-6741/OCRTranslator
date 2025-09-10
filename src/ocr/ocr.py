@@ -7,7 +7,19 @@ import cv2
 
 from src.image_manager.image_manager import ImageConverter
 
-class OCR():
+class IOCR(ABC):
+    """OCR インターフェース"""
+    @abstractmethod
+    def read_text(self) -> str:
+        """画像からテキストを抽出する"""
+        pass
+
+    @property
+    @abstractmethod
+    def extracted_text(self) -> str:
+        """抽出結果をプロパティで取得"""
+        pass
+
     """
     画像からテキストを抽出するためのOCRユーティリティクラス
 
