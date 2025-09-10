@@ -3,6 +3,8 @@ import numpy as np
 import cv2
 from PIL import Image
 
+from src.image_manager.image_manager import ImageConverter
+
 class OCR():
     """
     画像からテキストを抽出するためのOCRユーティリティクラス
@@ -28,7 +30,7 @@ class OCR():
         pipeline = [
             PreProcessor.apply_grayscale,
             PreProcessor.apply_lit,
-            PreProcessor.convert_cv2_to_pil
+            ImageConverter.convert_cv2_to_pil
         ]
 
         pre_processed_image = image
@@ -75,17 +77,3 @@ class PreProcessor():
         look_up_table = np.clip(look_up_table, 0, 255).astype(np.uint8)
 
         return cv2.LUT(image, look_up_table)
-
-    @staticmethod
-    def convert_cv2_to_pil(image: np.ndarray) -> Image.Image:
-        """
-        OpenCV形式（NumPy配列）の画像をPIL.Image形式に変換するメソッド。
-
-        Args:
-            image (np.ndarray): OpenCV形式の画像
-
-        Returns:
-            Image.Image: PIL形式の画像
-        """
-
-        return Image.fromarray(image)
