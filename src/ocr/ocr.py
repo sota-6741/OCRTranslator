@@ -11,19 +11,16 @@ class IOCR(ABC):
     @abstractmethod
     def read_text(self) -> str:
         """画像からテキストを抽出する"""
-        pass
 
     @property
     @abstractmethod
     def extracted_text(self) -> str:
         """抽出結果をプロパティで取得"""
-        pass
 
     @property
     @abstractmethod
     def engine_name(self) -> str:
         """エンジン名を取得"""
-        pass
 
 
 class TesseractOCR(IOCR):
