@@ -11,7 +11,7 @@ class TranslationError(Exception):
 class TranslationConfig:
     """翻訳設定クラス"""
     source_language: str = "auto"
-    target_language: str = "japanese"
+    target_language: str = "ja"
 
 class ITranslator(ABC):
     """翻訳エンジン インターフェース"""
@@ -28,7 +28,7 @@ class ITranslator(ABC):
     @property
     @abstractmethod
     def translator_engine_name(self) ->str:
-        """翻訳エンジン名をプロパthで取得"""
+        """翻訳エンジン名をプロパティで取得"""
 
     @property
     @abstractmethod
@@ -37,7 +37,7 @@ class ITranslator(ABC):
 
 class GoogleTranslator(ITranslator):
     """Translatorライブラリの実装"""
-    def __init__(self, text: str, config: 'Optional[TranslationConfig]' = None):
+    def __init__(self, text: str, config: Optional[TranslationConfig] = None):
         self.input_text = text
         self.config = config or TranslationConfig()
         self._translated_text = ""
@@ -59,19 +59,23 @@ class GoogleTranslator(ITranslator):
         return self._detected_language
 
     def translate(self) -> str:
+        """テキストを翻訳する"""
         try:
             translator = Translator()
 
-            src: str = detect(self.input_text) if self.config.source_language == "auto" else self.config.source_language
-            self._detected_language: str = src
+            # 言語検出
+            if self.config.source_language == "auto":
+                self._detected_language = detect(self.input_text)
+            else:
+                self._detected_language = self.config.source_language
 
             result = translator.translate(
                 self.input_text,
-                src=src,
+                src=self._detected_language,
                 dest=self.config.target_language
             )
 
-            return str(result)
+            return result.text
 
         except Exception as e:
             raise TranslationError(f"google翻訳エラー: {e}")
@@ -83,12 +87,13 @@ class TranslatorFactory:
     }
 
     @staticmethod
-    def create_translator(engine_type: str, text: str, config: TranslationConfig) -> ITranslator:
+    def create_translator(engine_type: str, text: str, config: Optional[TranslationConfig] = None) -> ITranslator:
         """指定されたエンジンタイプで翻訳インスタンスを作成"""
-        try:
-            return TranslatorFactory._translator_engines[engine_type](text=text, config=config)
-        except KeyError as e:
-            raise ValueError(f"サポートされていないエンジンタイプです: {engine_type}") from e
+        if engine_type not in TranslatorFactory._translator_engines:
+            raise ValueError(f"サポートされていないエンジンタイプです: {engine_type}")
+
+        engine_class = TranslatorFactory._translator_engines[engine_type]
+        return engine_class(text=text, config=config)
 
     @staticmethod
     def get_available_engines() -> List[str]:
