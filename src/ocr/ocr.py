@@ -25,6 +25,7 @@ class IOCR(ABC):
         """エンジン名を取得"""
         pass
 
+
 class TesseractOCR(IOCR):
     """
     画像からテキストを抽出するためのOCRユーティリティクラス
@@ -67,6 +68,7 @@ class TesseractOCR(IOCR):
         """
 
         return pytesseract.image_to_string(self.processed_image, lang="eng")
+
 
 class OCREngine:
     """OCRエンジンのコンテキストクラス"""
