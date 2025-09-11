@@ -7,6 +7,8 @@ import cv2
 import mss
 from mss.screenshot import ScreenShot
 
+from src.utils.image_converter import ImageConverter
+
 @dataclass
 class Point(NamedTuple):
     """
