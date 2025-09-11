@@ -3,8 +3,7 @@ from abc import ABC, abstractmethod
 import pytesseract
 import numpy as np
 
-from src.ocr.preprocess import PreProcessor, Pipeline
-from src.image_manager.image_manager import ImageConverter
+from src.ocr.preprocess import PreProcessor
 
 class IOCR(ABC):
     """OCR インターフェース"""
@@ -12,13 +11,11 @@ class IOCR(ABC):
     @abstractmethod
     def extract_text(self, image: np.ndarray) -> str:
         """画像からテキストを抽出する"""
-        pass
 
     @property
     @abstractmethod
     def engine_name(self) -> str:
         """OCRエンジン名を取得"""
-        pass
 
 
 class TesseractOCR(IOCR):
