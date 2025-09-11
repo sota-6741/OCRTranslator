@@ -3,7 +3,7 @@ import numpy as np
 import time
 import cv2
 
-from src.image_manager.image_manager import ImageConverter
+from src.utils.image_converter import ImageConverter
 
 class PreProcessor():
     """
