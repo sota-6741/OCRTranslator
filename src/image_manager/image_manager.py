@@ -10,28 +10,50 @@ from mss.screenshot import ScreenShot
 
 @dataclass
 class Point(NamedTuple):
+    """
+    2次元空間内の点の座標
+
+    Attributes:
+        x (int): 点のx座標
+        y (int): 点のy座標
+    """
     x: int
     y: int
 
 
 @dataclass
 class RectangleCoordinates(NamedTuple):
+    """選択した矩形範囲の座標を管理する
+
+    Attributes:
+        top_left (Point): 矩形の左上の座標
+        top_right (Point): 矩形の右上の座標
+        bottom_left (Point): 矩形の左下の座標
+        bottom_right (Point): 矩形の右下の座標
+
+    Properties:
+        width (int): 矩形の幅．top_leftとtop_rightの水平距離
+        height (int): 矩形の高さ．top_leftとbottom_leftの垂直距離
+        rectangle_coordinates (tuple[int, int, int, int]): MSSでスクリーンショットを取るための形式（top_left.x, top_left.y, width, heigth）で矩形の座標を返す
+    """
     top_left: Point
     top_right: Point
-    bottom_right: Point
     bottom_left: Point
+    bottom_right: Point
 
     @property
     def width(self) -> int:
+        """矩形の幅"""
         return self.top_right.x - self.top_left.x
 
     @property
     def height(self) -> int:
+        """矩形の高さ"""
         return self.top_left.y - self.bottom_left.y
 
     @property
     def rectangle_coordinates(self) -> tuple[int, int, int, int]:
-        # MSS expects (left, top, width, height)
+        """MSSでの矩形座標"""
         return (self.top_left.x, self.top_left.y, self.width, self.height)
 
 
@@ -82,11 +104,18 @@ class ImageManager:
 
 
 class ImageConverter:
+    """画像形式を変換するクラス
+
+    主なメソッド:
+        - OpenCV形式（NumPy配列）の画像をPIL.Image形式に変換するメソッド
+        - mss形式 (ScreenShotクラス)の画像をOpenCV形式（NumPy配列）に変換するメソッド
+
+    """
 
     @staticmethod
     def convert_cv2_to_pil(image: np.ndarray) -> Image.Image:
         """
-        OpenCV形式（NumPy配列）の画像をPIL.Image形式に変換するメソッド。
+        OpenCV形式（NumPy配列）の画像をPIL.Image形式に変換するメソッド
 
         Args:
             image (np.ndarray): OpenCV形式の画像
@@ -106,7 +135,7 @@ class ImageConverter:
     @staticmethod
     def convert_mss_to_cv2(image: ScreenShot):
         """
-        mss形式 (ScreenShotクラス)の画像をOpenCV形式（NumPy配列）に変換するメソッド。
+        mss形式 (ScreenShotクラス)の画像をOpenCV形式（NumPy配列）に変換するメソッド
 
         Args:
             image (ScreenShot): mss形式 (ScreenShotクラス)の画像
