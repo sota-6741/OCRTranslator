@@ -42,6 +42,7 @@ class PreProcessor():
 
         return cv2.LUT(image, look_up_table)
 
+
 class Pipeline:
     def __init__(self):
         self.steps: List[Dict[str, Any]] = []
