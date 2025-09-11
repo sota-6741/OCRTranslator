@@ -22,39 +22,38 @@ class Point(NamedTuple):
 
 
 @dataclass
-class RectangleCoordinates(NamedTuple):
-    """選択した矩形範囲の座標を管理する
-
-    Attributes:
-        top_left (Point): 矩形の左上の座標
-        top_right (Point): 矩形の右上の座標
-        bottom_left (Point): 矩形の左下の座標
-        bottom_right (Point): 矩形の右下の座標
-
-    Properties:
-        width (int): 矩形の幅．top_leftとtop_rightの水平距離
-        height (int): 矩形の高さ．top_leftとbottom_leftの垂直距離
-        rectangle_coordinates (tuple[int, int, int, int]): MSSでスクリーンショットを取るための形式（top_left.x, top_left.y, width, heigth）で矩形の座標を返す
-    """
-    top_left: Point
-    top_right: Point
-    bottom_left: Point
-    bottom_right: Point
+class RectangleCoordinates:
+    """矩形範囲の座標"""
+    x: int          # 左上のx座標
+    y: int          # 左上のy座標
+    width: int      # 矩形の幅
+    height: int     # 矩形の高さ
 
     @property
-    def width(self) -> int:
-        """矩形の幅"""
-        return self.top_right.x - self.top_left.x
+    def top_left(self) -> Point:
+        return Point(self.x, self.y)
 
     @property
-    def height(self) -> int:
-        """矩形の高さ"""
-        return self.top_left.y - self.bottom_left.y
+    def top_right(self) -> Point:
+        return Point(self.x + self.width, self.y)
 
     @property
-    def rectangle_coordinates(self) -> tuple[int, int, int, int]:
-        """MSSでの矩形座標"""
-        return (self.top_left.x, self.top_left.y, self.width, self.height)
+    def bottom_left(self) -> Point:
+        return Point(self.x, self.y + self.height)
+
+    @property
+    def bottom_right(self) -> Point:
+        return Point(self.x + self.width, self.y + self.height)
+
+    @property
+    def mss_coordinates(self) -> dict:
+        """MSSライブラリ用の座標"""
+        return {
+            "left": self.x,
+            "top": self.y,
+            "width": self.width,
+            "height": self.height
+        }
 
 
 class ImageManager:
