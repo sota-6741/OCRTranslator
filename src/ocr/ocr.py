@@ -51,10 +51,12 @@ class TesseractOCR(IOCR):
 
     @property
     def extract_text(self) -> str:
+        """画像から抽出した文字"""
         return self._extracted_text
 
     @property
     def engine_name(self) -> str:
+        """OCRエンジンの名前"""
         return "Tesseract"
 
     def read_text(self) -> str:
