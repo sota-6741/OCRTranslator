@@ -14,7 +14,7 @@ class PreProcessor():
         - 線形階調変換（コントラスト・明るさ調整）
     """
     @staticmethod
-    def run_pipline(image: np.ndarray):
+    def run_pipeline(image: np.ndarray):
          # 画像の前処理
         pipeline = Pipeline()
 

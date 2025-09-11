@@ -8,19 +8,17 @@ from src.image_manager.image_manager import ImageConverter
 
 class IOCR(ABC):
     """OCR インターフェース"""
+
     @abstractmethod
-    def read_text(self) -> str:
+    def extract_text(self, image: np.ndarray) -> str:
         """画像からテキストを抽出する"""
+        pass
 
     @property
     @abstractmethod
-    def extracted_text(self) -> str:
-        """抽出結果をプロパティで取得"""
-
-    @property
-    @abstractmethod
-    def ocr_engine_name(self) -> str:
+    def engine_name(self) -> str:
         """OCRエンジン名を取得"""
+        pass
 
 
 class TesseractOCR(IOCR):
@@ -32,34 +30,25 @@ class TesseractOCR(IOCR):
     主なメソッド:
         - 画像から文字を抽出
     """
-    def __init__(self, image: np.ndarray):
-        self.input_image = image
+    def __init__(self, language: str="eng"):
+        self.language = language
 
-        self.processed_image, self.log = PreProcessor.run_pipline(self.input_image)
-
-        self._extracted_text: str = self.read_text()
-
-    @property
-    def extracted_text(self) -> str:
-        """画像から抽出した文字"""
-        return self._extracted_text
-
-    @property
-    def ocr_engine_name(self) -> str:
-        """OCRエンジンの名前"""
-        return "Tesseract"
-
-    def read_text(self) -> str:
+    def extract_text(self, image: np.ndarray) -> str:
         """画像から文字を抽出するメソッド
-
-        Args:
-            image (np.ndarray): OCR処理を行う画像
 
         Returns:
             str: 画像から抽出されたテキスト
         """
+        # 前処理の実行
+        processed_image, _ = PreProcessor.run_pipeline(image)
 
-        return pytesseract.image_to_string(self.processed_image, lang="eng")
+        return pytesseract.image_to_string(processed_image, self.language)
+
+    @property
+    def engine_name(self) -> str:
+        """OCRエンジンの名前"""
+        return "Tesseract"
+
 
 class OCRFactory:
     """OCRエンジンのファクトリークラス"""
@@ -68,11 +57,12 @@ class OCRFactory:
     }
 
     @staticmethod
-    def create_ocr(engine_type: str, image: np.ndarray) -> IOCR:
-        try:
-            return OCRFactory._ocr_engines[engine_type](image=image)
-        except KeyError as e:
-            raise ValueError(f"サポートされていないエンジンタイプです: {engine_type}") from e
+    def create_ocr(engine_type: str, language: str = "eng") -> IOCR:
+        if engine_type not in OCRFactory._ocr_engines:
+            raise ValueError(f"サポートされていないエンジンタイプです: {engine_type}")
+
+        engine_class = OCRFactory._ocr_engines[engine_type]
+        return engine_class(language=language)
 
     @staticmethod
     def get_available_engines() -> List[str]:
@@ -89,13 +79,12 @@ class OCREngine:
         """OCRエンジンを切り替える"""
         self._strategy = strategy
 
-    def extract_text(self) -> str:
+    def extract_text(self, image: np.ndarray) -> str:
         """現在のエンジンでテキスト抽出"""
-        return self._strategy.extracted_text
+        return self._strategy.extract_text(image)
 
     def get_engine_info(self) -> Dict[str, Any]:
         """OCRエンジンの情報を取得"""
         return {
-            "engine": self._strategy.ocr_engine_name,
-            "text": self._strategy.extracted_text
+            "engine": self._strategy.engine_name
         }
