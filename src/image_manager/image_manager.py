@@ -124,7 +124,7 @@ class ImageConverter:
             Image.Image: PIL形式の画像
         """
 
-        rgb_image = cv2.cutColor(image, cv2.COLOR_BGR2RGB)
+        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         pil_image = Image.fromarray(rgb_image)
 
         # メモリ開放
