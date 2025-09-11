@@ -4,6 +4,7 @@ import pytesseract
 import numpy as np
 
 from src.ocr.preprocess import PreProcessor
+from src.utils.image_converter import ImageConverter
 
 class IOCR(ABC):
     """OCR インターフェース"""
@@ -38,7 +39,7 @@ class TesseractOCR(IOCR):
             str: 画像から抽出されたテキスト
         """
         # 前処理の実行
-        processed_image, _ = PreProcessor.run_pipeline(image)
+        processed_image, _ = self.preprocessor.run_pipeline(image)
 
         return pytesseract.image_to_string(processed_image, self.language)
 
