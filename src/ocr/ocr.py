@@ -19,8 +19,8 @@ class IOCR(ABC):
 
     @property
     @abstractmethod
-    def engine_name(self) -> str:
-        """エンジン名を取得"""
+    def ocr_engine_name(self) -> str:
+        """OCRエンジン名を取得"""
 
 
 class TesseractOCR(IOCR):
@@ -52,7 +52,7 @@ class TesseractOCR(IOCR):
         return self._extracted_text
 
     @property
-    def engine_name(self) -> str:
+    def ocr_engine_name(self) -> str:
         """OCRエンジンの名前"""
         return "Tesseract"
 
@@ -103,6 +103,6 @@ class OCREngine:
     def get_engin_info(self) -> Dict[str, Any]:
         """OCRエンジンの情報を取得"""
         return {
-            "engine": self._strategy.engine_name,
+            "engine": self._strategy.ocr_engine_name,
             "text": self._strategy.extracted_text
         }
