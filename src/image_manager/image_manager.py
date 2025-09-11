@@ -73,7 +73,7 @@ class ImageManager:
         """
 
         screenshot_tool = mss.mss()
-        image: ScreenShot = screenshot_tool.grab(self.rectangle_coordinates.rectangle_coordinates)
+        image: ScreenShot = screenshot_tool.grab(self.rectangle_coordinates.mss_coordinates)
         cv2_image: np.ndarray = ImageConverter.convert_mss_to_cv2(image=image)
 
         del image

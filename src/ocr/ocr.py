@@ -35,14 +35,7 @@ class TesseractOCR(IOCR):
     def __init__(self, image: np.ndarray):
         self.input_image = image
 
-        # 画像の前処理
-        pipeline = Pipeline()
-
-        pipeline.add_step("grayscale", PreProcessor.apply_grayscale)
-        pipeline.add_step("LIT", PreProcessor.apply_lit)
-        pipeline.add_step("convert_cv2_to_pil", ImageConverter.convert_cv2_to_pil)
-
-        self.processed_image, self.log = pipeline.execute(self.input_image)
+        self.processed_image, self.log = PreProcessor.run_pipline(self.input_image)
 
         self._extracted_text: str = self.read_text()
 

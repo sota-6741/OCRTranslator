@@ -3,6 +3,8 @@ import numpy as np
 import time
 import cv2
 
+from src.image_manager.image_manager import ImageConverter
+
 class PreProcessor():
     """
     画像の前処理を行うためのユーティリティクラス
@@ -11,6 +13,15 @@ class PreProcessor():
         - グレースケール化
         - 線形階調変換（コントラスト・明るさ調整）
     """
+    @staticmethod
+    def run_pipline(image: np.ndarray):
+         # 画像の前処理
+        pipeline = Pipeline()
+
+        pipeline.add_step("grayscale", PreProcessor.apply_grayscale)
+        pipeline.add_step("LIT", PreProcessor.apply_lit)
+        pipeline.add_step("convert_cv2_to_pil", ImageConverter.convert_cv2_to_pil)
+        return pipeline.execute(image=image)
 
     @staticmethod
     def apply_grayscale(image: np.ndarray):
