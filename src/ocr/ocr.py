@@ -100,7 +100,7 @@ class OCREngine:
         """現在のエンジンでテキスト抽出"""
         return self._strategy.extracted_text
 
-    def get_engin_info(self) -> Dict[str, Any]:
+    def get_engine_info(self) -> Dict[str, Any]:
         """OCRエンジンの情報を取得"""
         return {
             "engine": self._strategy.ocr_engine_name,
