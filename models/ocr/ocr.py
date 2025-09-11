@@ -3,8 +3,7 @@ from abc import ABC, abstractmethod
 import pytesseract
 import numpy as np
 
-from src.ocr.preprocess import PreProcessor
-from src.utils.image_converter import ImageConverter
+from models.ocr.preprocess import PreProcessor
 
 class IOCR(ABC):
     """OCR インターフェース"""

@@ -7,7 +7,7 @@ import cv2
 import mss
 from mss.screenshot import ScreenShot
 
-from src.utils.image_converter import ImageConverter
+from models.utils.image_converter import ImageConverter
 
 @dataclass
 class Point(NamedTuple):
@@ -60,8 +60,9 @@ class RectangleCoordinates:
 class ImageManager:
     """画像のキャプチャ、取得時のタイムスタンプの取得、画像の保存に関するクラス。"""
 
-    def __init__(self, rectangle_coords: RectangleCoordinates):
+    def __init__(self, rectangle_coords: RectangleCoordinates, image_converter: ImageConverter = None):
         self.rectangle_coordinates: RectangleCoordinates = rectangle_coords
+        self.image_converter = image_converter or ImageConverter()
         # Imagesディレクトリの作成
         self.temp_dir = Path("Images/temp")
         self.temp_dir.mkdir(parents=True, exist_ok=True)
@@ -75,7 +76,7 @@ class ImageManager:
 
         screenshot_tool = mss.mss()
         image: ScreenShot = screenshot_tool.grab(self.rectangle_coordinates.mss_coordinates)
-        cv2_image: np.ndarray = ImageConverter.convert_mss_to_cv2(image=image)
+        cv2_image: np.ndarray = self.image_converter.convert_mss_to_cv2(image=image)
 
         del image
         return cv2_image
