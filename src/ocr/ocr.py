@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 from abc import ABC, abstractmethod
 import pytesseract
 import numpy as np
@@ -47,7 +47,7 @@ class TesseractOCR(IOCR):
         self._extracted_text: str = self.read_text()
 
     @property
-    def extract_text(self) -> str:
+    def extracted_text(self) -> str:
         """画像から抽出した文字"""
         return self._extracted_text
 
@@ -68,6 +68,23 @@ class TesseractOCR(IOCR):
 
         return pytesseract.image_to_string(self.processed_image, lang="eng")
 
+class OCRFactory:
+    """OCRエンジンのファクトリークラス"""
+    _ocr_engines = {
+        "tesseract": TesseractOCR,
+    }
+
+    @staticmethod
+    def create_ocr(engine_type: str, image: np.ndarray) -> IOCR:
+        try:
+            return OCRFactory._ocr_engines[engine_type](image=image)
+        except KeyError as e:
+            raise ValueError(f"サポートされていないエンジンタイプです: {engine_type}") from e
+
+    @staticmethod
+    def get_available_engines() -> List[str]:
+        """利用可能なエンジン一覧を取得"""
+        return list(OCRFactory._ocr_engines.keys())
 
 class OCREngine:
     """OCRエンジンのコンテキストクラス"""
