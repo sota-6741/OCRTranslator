@@ -27,8 +27,9 @@ class TesseractOCR(IOCR):
     主なメソッド:
         - 画像から文字を抽出
     """
-    def __init__(self, language: str="eng"):
+    def __init__(self, language: str="eng", preprocessor: PreProcessor = None):
         self.language = language
+        self.preprocessor = preprocessor or PreProcessor()
 
     def extract_text(self, image: np.ndarray) -> str:
         """画像から文字を抽出するメソッド
