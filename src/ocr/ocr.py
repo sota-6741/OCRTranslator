@@ -1,21 +1,62 @@
+from typing import Dict, Any
+from abc import ABC, abstractmethod
 import pytesseract
 import numpy as np
-import cv2
-from PIL import Image
 
-class OCR():
+from src.ocr.preprocess import PreProcessor, Pipeline
+from src.image_manager.image_manager import ImageConverter
+
+class IOCR(ABC):
+    """OCR インターフェース"""
+    @abstractmethod
+    def read_text(self) -> str:
+        """画像からテキストを抽出する"""
+
+    @property
+    @abstractmethod
+    def extracted_text(self) -> str:
+        """抽出結果をプロパティで取得"""
+
+    @property
+    @abstractmethod
+    def engine_name(self) -> str:
+        """エンジン名を取得"""
+
+
+class TesseractOCR(IOCR):
     """
     画像からテキストを抽出するためのOCRユーティリティクラス
 
-    前処理（グレースケール化や階調変換など）を行った後，
-    pytesseractを用いて画像から文字認識を実施します
+    前処理を行った後，pytesseractを用いて画像から文字認識を実施します
 
     主なメソッド:
         - 画像から文字を抽出
     """
+    def __init__(self, image: np.ndarray):
+        self.input_image = image
 
-    @staticmethod
-    def read_text(image: np.ndarray) -> str:
+        # 画像の前処理
+        pipeline = Pipeline()
+
+        pipeline.add_step("grayscale", PreProcessor.apply_grayscale)
+        pipeline.add_step("LIT", PreProcessor.apply_lit)
+        pipeline.add_step("convert_cv2_to_pil", ImageConverter.convert_cv2_to_pil)
+
+        self.processed_image, self.log = pipeline.execute(self.input_image)
+
+        self._extracted_text: str = self.read_text()
+
+    @property
+    def extract_text(self) -> str:
+        """画像から抽出した文字"""
+        return self._extracted_text
+
+    @property
+    def engine_name(self) -> str:
+        """OCRエンジンの名前"""
+        return "Tesseract"
+
+    def read_text(self) -> str:
         """画像から文字を抽出するメソッド
 
         Args:
@@ -25,68 +66,26 @@ class OCR():
             str: 画像から抽出されたテキスト
         """
 
-        # imageの前処理
-        pipeline = [
-            PreProcessor.apply_grayscale,
-            PreProcessor.apply_lit,
-            PreProcessor.convert_cv2_to_pil
-        ]
+        return pytesseract.image_to_string(self.processed_image, lang="eng")
 
-        pre_processed_image = image
-        for func in pipeline:
-            pre_processed_image = func(pre_processed_image)
 
-        return pytesseract.image_to_string(pre_processed_image, lang="eng")
+class OCREngine:
+    """OCRエンジンのコンテキストクラス"""
 
-class PreProcessor():
-    """
-    画像の前処理を行うためのユーティリティクラス
+    def __init__(self, strategy: IOCR):
+        self._strategy = strategy
 
-    主な機能:
-        - グレースケール化
-        - 線形階調変換（コントラスト・明るさ調整）
-    """
+    def set_strategy(self, strategy: IOCR):
+        """OCRエンジンを切り替える"""
+        self._strategy = strategy
 
-    @staticmethod
-    def apply_grayscale(image: np.ndarray):
-        """画像をグレイスケール化
+    def extract_text(self) -> str:
+        """現在のエンジンでテキスト抽出"""
+        return self._strategy.extracted_text
 
-        Args:
-            image (np.ndarray): 入力画像
-        """
-
-        return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-    @staticmethod
-    def apply_lit(image: np.ndarray, alpha: float=1, beta: float=0):
-        """線形階調変換を画像に適用
-
-        Args:
-            image (np.ndarray): 入力画像
-            alpha (float): LUTのアルファ値
-            beta (float): LUTのベータ値
-
-        Returns:
-            np.ndarray: 階調変換後の画像(NupPy配列)
-        """
-
-        # テーブル作成
-        look_up_table = alpha * np.arange(256) + beta
-        # [0, 255]でクリップし，uint8型にする
-        look_up_table = np.clip(look_up_table, 0, 255).astype(np.uint8)
-
-        return cv2.LUT(image, look_up_table)
-
-    @staticmethod
-    def convert_cv2_to_pil(image: np.ndarray) -> Image.Image:
-        """
-        OpenCV形式（NumPy配列）の画像をPIL.Image形式に変換するメソッド。
-
-        Args:
-            image (np.ndarray): OpenCV形式の画像
-
-        Returns:
-            Image.Image: PIL形式の画像
-        """
-
-        return Image.fromarray(image)
+    def get_engin_info(self) -> Dict[str, Any]:
+        """OCRエンジンの情報を取得"""
+        return {
+            "engine": self._strategy.engine_name,
+            "text": self._strategy.extracted_text
+        }
