@@ -1,21 +1,15 @@
-from typing import Dict, Any, List
-from abc import ABC, abstractmethod
+from typing import Dict, Any, List, Tuple, Protocol
+from dataclasses import dataclass
 import pytesseract
 import numpy as np
 
 from models.ocr.preprocess import run_pipeline
 
-class IOCR(ABC):
+class IOCR(Protocol):
     """OCR インターフェース"""
 
-    @abstractmethod
-    def extract_text(self, image: np.ndarray) -> str:
-        """画像からテキストを抽出する"""
-
-    @property
-    @abstractmethod
-    def engine_name(self) -> str:
-        """OCRエンジン名を取得"""
+    engine_name: str
+    def extract_text(self, image: np.ndarray) -> str: ...
 
 
 class TesseractOCR(IOCR):

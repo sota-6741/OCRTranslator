@@ -1,5 +1,4 @@
-from typing import Optional, List
-from abc import ABC, abstractmethod
+from typing import Optional, List, Protocol
 from dataclasses import dataclass
 from googletrans import Translator
 from langdetect import detect
@@ -13,7 +12,7 @@ class TranslationConfig:
     source_language: str = "auto"
     target_language: str = "ja"
 
-class ITranslator(ABC):
+class ITranslator(Protocol):
     """翻訳エンジン インターフェース"""
 
     @abstractmethod
