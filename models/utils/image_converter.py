@@ -3,51 +3,38 @@ from PIL import Image
 import cv2
 from mss.screenshot import ScreenShot
 
-class ImageConverter:
-    """画像形式を変換するクラス
-
-    主なメソッド:
-        - OpenCV形式（NumPy配列）の画像をPIL.Image形式に変換するメソッド
-        - mss形式 (ScreenShotクラス)の画像をOpenCV形式（NumPy配列）に変換するメソッド
-
+def convert_cv2_to_pil(image: np.ndarray) -> Image.Image:
     """
+    OpenCV形式（NumPy配列）の画像をPIL.Image形式に変換する関数
 
-    @staticmethod
-    def convert_cv2_to_pil(image: np.ndarray) -> Image.Image:
-        """
-        OpenCV形式（NumPy配列）の画像をPIL.Image形式に変換するメソッド
+    Args:
+        image (np.ndarray): OpenCV形式の画像
 
-        Args:
-            image (np.ndarray): OpenCV形式の画像
+    Returns:
+        Image.Image: PIL形式の画像
+    """
+    rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    pil_image = Image.fromarray(rgb_image)
 
-        Returns:
-            Image.Image: PIL形式の画像
-        """
+    # メモリ開放
+    del rgb_image
 
-        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        pil_image = Image.fromarray(rgb_image)
+    return pil_image
 
-        # メモリ開放
-        del rgb_image
+def convert_mss_to_cv2(image: ScreenShot) -> np.ndarray:
+    """
+    mss形式 (ScreenShotクラス)の画像をOpenCV形式（NumPy配列）に変換する関数
 
-        return pil_image
+    Args:
+        image (ScreenShot): mss形式 (ScreenShotクラス)の画像
 
-    @staticmethod
-    def convert_mss_to_cv2(image: ScreenShot):
-        """
-        mss形式 (ScreenShotクラス)の画像をOpenCV形式（NumPy配列）に変換するメソッド
+    Returns:
+        np.ndarray: OpenCV形式の画像
+    """
+    image_array = np.array(image)
+    bgr_image = cv2.cvtColor(image_array, cv2.COLOR_BGRA2BGR)
 
-        Args:
-            image (ScreenShot): mss形式 (ScreenShotクラス)の画像
+    # メモリ開放
+    del image_array
 
-        Returns:
-            np.ndarray: OpenCV形式の画像
-        """
-
-        image_array = np.array(image)
-        bgr_image = cv2.cvtColor(image_array, cv2.COLOR_BGRA2BGR)
-
-        # メモリ開放
-        del image_array
-
-        return bgr_image
+    return bgr_image

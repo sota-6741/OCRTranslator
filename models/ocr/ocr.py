@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import pytesseract
 import numpy as np
 
-from models.ocr.preprocess import PreProcessor
+from models.ocr.preprocess import run_pipeline
 
 class IOCR(ABC):
     """OCR インターフェース"""
@@ -27,9 +27,8 @@ class TesseractOCR(IOCR):
     主なメソッド:
         - 画像から文字を抽出
     """
-    def __init__(self, language: str="eng", preprocessor: PreProcessor = None):
+    def __init__(self, language: str="eng"):
         self.language = language
-        self.preprocessor = preprocessor or PreProcessor()
 
     def extract_text(self, image: np.ndarray) -> str:
         """画像から文字を抽出するメソッド
@@ -38,7 +37,7 @@ class TesseractOCR(IOCR):
             str: 画像から抽出されたテキスト
         """
         # 前処理の実行
-        processed_image, _ = self.preprocessor.run_pipeline(image)
+        processed_image, _ = run_pipeline(image)
 
         return pytesseract.image_to_string(processed_image, self.language)
 
