@@ -9,7 +9,6 @@ from mss.screenshot import ScreenShot
 
 from models.utils.image_converter import convert_mss_to_cv2
 
-@dataclass
 class Point(NamedTuple):
     """
     2次元空間内の点の座標
