@@ -61,6 +61,10 @@ class GoogleTranslator(ITranslator):
     def translate(self) -> str:
         """テキストを翻訳する"""
         try:
+            # 空文字列や空白のみの場合は空文字列を返す
+            if not self.input_text or not self.input_text.strip():
+                return ""
+
             translator = Translator()
 
             # 言語検出
