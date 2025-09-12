@@ -23,6 +23,9 @@ class MainPresenter:
         self.state = AppState()
         self.image_manager: Optional[ImageManager] = None
 
+        # ViewにPresenterを設定
+        self.view.set_presenter(self)
+
         # デフォルト設定で初期化
         self._init_engines()
         self._render()
@@ -73,6 +76,9 @@ class MainPresenter:
     async def _execute_ocr(self):
         """OCR実行（簡素化）"""
         try:
+            # image_managerが設定されていることを前提とする
+            assert self.image_manager is not None
+            
             image = await asyncio.get_event_loop().run_in_executor(
                 None, self.image_manager.rectangle_capture
             )
