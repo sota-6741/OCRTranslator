@@ -33,7 +33,7 @@ class MainView(ft.Column):
         self.presenter = presenter
 
     def start_capture(self, e):
-        self.page.window_visible = False
+        self.page.window.opacity = 0
         self.page.update()
         # Give the window time to hide
         time.sleep(0.5)
@@ -59,9 +59,9 @@ class MainView(ft.Column):
                     rect = RectangleCoordinates(x=left, y=top, width=width, height=height)
                     if self.presenter:
                         self.page.run_task(self.presenter.capture_and_translate, rect)
-                
+
                 # Restore the window
-                self.page.window_visible = True
+                self.page.window.opacity = 100
                 self.page.update()
                 self.start_pos = None
 
@@ -73,5 +73,5 @@ class MainView(ft.Column):
         self.update()
 
     def show_error(self, message):
-        self.page.snack_bar = ft.SnackBar(ft.Text(message), open=True)
+        self.page.open(ft.SnackBar(ft.Text(message), open=True))
         self.page.update()
