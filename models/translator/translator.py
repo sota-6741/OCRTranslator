@@ -1,5 +1,5 @@
-from typing import Optional, List
-from abc import ABC, abstractmethod
+from typing import Optional, List, Protocol
+from abc import abstractmethod
 from dataclasses import dataclass
 from googletrans import Translator
 from langdetect import detect
@@ -11,13 +11,13 @@ class TranslationError(Exception):
 class TranslationConfig:
     """翻訳設定クラス"""
     source_language: str = "auto"
-    target_language: str = "japanese"
+    target_language: str = "ja"
 
-class ITranslator(ABC):
+class ITranslator(Protocol):
     """翻訳エンジン インターフェース"""
 
     @abstractmethod
-    def translate(self) -> str:
+    def translate(self, text: str) -> str:
         """テキストの翻訳"""
 
     @property
@@ -28,7 +28,7 @@ class ITranslator(ABC):
     @property
     @abstractmethod
     def translator_engine_name(self) ->str:
-        """翻訳エンジン名をプロパthで取得"""
+        """翻訳エンジン名をプロパティで取得"""
 
     @property
     @abstractmethod
@@ -37,14 +37,10 @@ class ITranslator(ABC):
 
 class GoogleTranslator(ITranslator):
     """Translatorライブラリの実装"""
-    def __init__(self, text: str, config: 'Optional[TranslationConfig]' = None):
-        self.input_text = text
+    def __init__(self, config: Optional[TranslationConfig] = None):
         self.config = config or TranslationConfig()
         self._translated_text = ""
         self._detected_language = ""
-
-        # 翻訳の実行
-        self._translated_text = self.translate()
 
     @property
     def translated_text(self) -> str:
@@ -52,26 +48,34 @@ class GoogleTranslator(ITranslator):
 
     @property
     def translator_engine_name(self) -> str:
-        return "Google translator"
+        return "Google"
 
     @property
     def source_language(self) -> str:
         return self._detected_language
 
-    def translate(self) -> str:
+    async def translate(self, text) -> str:
+        """テキストを翻訳する"""
         try:
+            # 空文字列や空白のみの場合は空文字列を返す
+            if not text or not text.strip():
+                return ""
+
             translator = Translator()
 
-            src: str = detect(self.input_text) if self.config.source_language == "auto" else self.config.source_language
-            self._detected_language: str = src
+            # 言語検出
+            if self.config.source_language == "auto":
+                self._detected_language = detect(text)
+            else:
+                self._detected_language = self.config.source_language
 
-            result = translator.translate(
-                self.input_text,
-                src=src,
+            result = await translator.translate(
+                text,
+                src=self._detected_language,
                 dest=self.config.target_language
             )
 
-            return str(result)
+            return result.text
 
         except Exception as e:
             raise TranslationError(f"google翻訳エラー: {e}")
@@ -79,16 +83,18 @@ class GoogleTranslator(ITranslator):
 class TranslatorFactory:
     """翻訳エンジンのファクトリークラス"""
     _translator_engines = {
-        "Google translator": GoogleTranslator,
+        "Google": GoogleTranslator,
     }
 
-    @staticmethod
-    def create_translator(engine_type: str, text: str, config: TranslationConfig) -> ITranslator:
-        """指定されたエンジンタイプで翻訳インスタンスを作成"""
-        try:
-            return TranslatorFactory._translator_engines[engine_type](text=text, config=config)
-        except KeyError as e:
-            raise ValueError(f"サポートされていないエンジンタイプです: {engine_type}") from e
+    def __init__(self, engine_type: str = "Google"):
+        if engine_type not in self._translator_engines:
+            raise ValueError(f"サポートされていないエンジンタイプです: {engine_type}")
+        self._engine_class = self._translator_engines[engine_type]
+        self.engine_type = engine_type
+
+    def create(self, config: Optional[TranslationConfig] = None) -> ITranslator:
+        """指定されたエンジンで翻訳インスタンスを作成"""
+        return self._engine_class(config=config)
 
     @staticmethod
     def get_available_engines() -> List[str]:
