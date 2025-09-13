@@ -54,7 +54,7 @@ class GoogleTranslator(ITranslator):
     def source_language(self) -> str:
         return self._detected_language
 
-    def translate(self, text) -> str:
+    async def translate(self, text) -> str:
         """テキストを翻訳する"""
         try:
             # 空文字列や空白のみの場合は空文字列を返す
@@ -69,7 +69,7 @@ class GoogleTranslator(ITranslator):
             else:
                 self._detected_language = self.config.source_language
 
-            result = translator.translate(
+            result = await translator.translate(
                 text,
                 src=self._detected_language,
                 dest=self.config.target_language

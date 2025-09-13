@@ -44,7 +44,7 @@ class ModelFacade:
         """利用可能な翻訳エンジンのリストを取得します。"""
         return TranslatorFactory.get_available_engines()
 
-    def translate_image_from_screen(
+    async def translate_image_from_screen(
         self,
         rect: RectangleCoordinates,
         translation_config: Optional[TranslationConfig] = None,
@@ -72,7 +72,7 @@ class ModelFacade:
         translator = self._translator_factory.create(
             config=translation_config,
         )
-        translated_text = translator.translate(extracted_text)
+        translated_text = await translator.translate(extracted_text)
         source_language = translator.source_language
 
         return translated_text, extracted_text, source_language
