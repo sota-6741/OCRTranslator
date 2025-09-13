@@ -42,9 +42,6 @@ class GoogleTranslator(ITranslator):
         self._translated_text = ""
         self._detected_language = ""
 
-        # 翻訳の実行
-        self._translated_text = self.translate()
-
     @property
     def translated_text(self) -> str:
         return self._translated_text
