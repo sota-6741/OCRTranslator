@@ -1,4 +1,5 @@
 from typing import Optional, List, Protocol
+from abc import abstractmethod
 from dataclasses import dataclass
 from googletrans import Translator
 from langdetect import detect
