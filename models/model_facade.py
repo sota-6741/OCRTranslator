@@ -14,7 +14,8 @@ class ModelFacade:
     def __init__(self):
         # デフォルトのOCRエンジンと言語を設定
         self._ocr_engine: IOCR = OCRFactory.create_ocr("tesseract", language="eng")
-        self._translator_factory = TranslatorFactory
+        # デフォルトの翻訳エンジンを指定してFactoryをインスタンス化
+        self._translator_factory = TranslatorFactory(engine_type="Google")
 
     def set_ocr_engine(self, engine_type: str, language: str = "eng"):
         """
@@ -26,18 +27,26 @@ class ModelFacade:
         """
         self._ocr_engine = OCRFactory.create_ocr(engine_type, language)
 
+    def set_translator_engine(self, engine_type: str):
+        """
+        使用する翻訳エンジンを切り替えます。
+
+        Args:
+            engine_type (str): "Google" などのエンジンタイプ。
+        """
+        self._translator_factory = TranslatorFactory(engine_type)
+
     def get_available_ocr_engines(self) -> List[str]:
         """利用可能なOCRエンジンのリストを取得します。"""
         return OCRFactory.get_available_engines()
 
     def get_available_translator_engines(self) -> List[str]:
         """利用可能な翻訳エンジンのリストを取得します。"""
-        return self._translator_factory.get_available_engines()
+        return TranslatorFactory.get_available_engines()
 
     def translate_image_from_screen(
         self,
         rect: RectangleCoordinates,
-        translator_engine: str = "Google translator",
         translation_config: Optional[TranslationConfig] = None,
     ) -> tuple[str, str, str]:
         """
@@ -45,7 +54,6 @@ class ModelFacade:
 
         Args:
             rect (RectangleCoordinates): キャプチャする画面領域。
-            translator_engine (str): 使用する翻訳エンジン。
             translation_config (Optional[TranslationConfig]): 翻訳設定。
 
         Returns:
@@ -61,12 +69,10 @@ class ModelFacade:
             return "", "", ""
 
         # 3. テキスト翻訳
-        translator = self._translator_factory.create_translator(
-            engine_type=translator_engine,
-            text=extracted_text,
+        translator = self._translator_factory.create(
             config=translation_config,
         )
-        translated_text = translator.translate()
+        translated_text = translator.translate(extracted_text)
         source_language = translator.source_language
 
         return translated_text, extracted_text, source_language
