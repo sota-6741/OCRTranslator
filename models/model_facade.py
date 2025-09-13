@@ -66,7 +66,7 @@ class ModelFacade:
             text=extracted_text,
             config=translation_config,
         )
-        translated_text = translator.translated_text
+        translated_text = translator.translate()
         source_language = translator.source_language
 
         return translated_text, extracted_text, source_language
