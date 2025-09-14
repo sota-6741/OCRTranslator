@@ -9,6 +9,7 @@ import asyncio
 
 class AsyncWorkerThread(QThread):
     """非同期タスクを実行するワーカースレッド"""
+
     finished = pyqtSignal(str, str, str)  # translated, original, source_lang
     error_occurred = pyqtSignal(str)
 
@@ -19,6 +20,7 @@ class AsyncWorkerThread(QThread):
 
     def run(self):
         """非同期で翻訳処理を実行"""
+
         try:
             # asyncioのイベントループを作成して実行
             loop = asyncio.new_event_loop()
@@ -53,7 +55,7 @@ class MainView(QWidget):
         layout = QVBoxLayout()
 
         # キャプチャボタン
-        self.capture_button = QPushButton("Capture and Translate")
+        self.capture_button = QPushButton("OCR&翻訳開始")
         self.capture_button.clicked.connect(self.start_capture)
         self.capture_button.setFont(QFont("Arial", 12))
         layout.addWidget(self.capture_button)
@@ -62,13 +64,13 @@ class MainView(QWidget):
         layout.addWidget(self.create_divider())
 
         # 翻訳結果セクション
-        translation_label = QLabel("Translation:")
+        translation_label = QLabel("翻訳結果:")
         translation_label.setFont(QFont("Arial", 10, QFont.Weight.Bold))
         translation_label.setStyleSheet("QLabel { color: #2c3e50; margin-bottom: 5px; }")
         layout.addWidget(translation_label)
 
         self.translated_text = QTextEdit(self)
-        self.translated_text.setPlainText("Translated text will appear here.")
+        self.translated_text.setPlainText("翻訳結果はここに表示されます．")
         self.translated_text.setReadOnly(True)
         self.translated_text.setMaximumHeight(120)
         self.translated_text.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -89,13 +91,13 @@ class MainView(QWidget):
         layout.addWidget(self.create_divider())
 
         # 元テキストセクション
-        original_label = QLabel("Original:")
+        original_label = QLabel("OCR結果:")
         original_label.setFont(QFont("Arial", 10, QFont.Weight.Bold))
         original_label.setStyleSheet("QLabel { color: #2c3e50; margin-bottom: 5px; }")
         layout.addWidget(original_label)
 
         self.original_text = QTextEdit(self)
-        self.original_text.setPlainText("Original text will appear here.")
+        self.original_text.setPlainText("OCRの検出結果はここに表示されます．")
         self.original_text.setReadOnly(True)
         self.original_text.setMaximumHeight(120)
         self.original_text.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -116,12 +118,12 @@ class MainView(QWidget):
         layout.addWidget(self.create_divider())
 
         # 元言語セクション
-        source_lang_label = QLabel("Source Language:")
+        source_lang_label = QLabel("検出された言語:")
         source_lang_label.setFont(QFont("Arial", 10, QFont.Weight.Bold))
         source_lang_label.setStyleSheet("QLabel { color: #2c3e50; margin-bottom: 5px; }")
         layout.addWidget(source_lang_label)
 
-        self.source_lang = QLabel("Source language will appear here.")
+        self.source_lang = QLabel("検出された言語はここに表示されます．")
         self.source_lang.setStyleSheet("QLabel { background-color: #e8f4fd; color: #2c3e50; padding: 10px; border: 1px solid #ccc; font-size: 12px; font-weight: bold; }")
         layout.addWidget(self.source_lang)
 
@@ -179,7 +181,7 @@ class MainView(QWidget):
                 self.worker_thread.start()
 
                 # UIを更新してキャプチャ中であることを表示
-                self.capture_button.setText("Processing...")
+                self.capture_button.setText("実行中...")
                 self.capture_button.setEnabled(False)
 
         except Exception as e:
@@ -187,7 +189,7 @@ class MainView(QWidget):
 
     def on_overlay_closed(self):
         """オーバーレイが閉じられた時のコールバック"""
-        print("MainView: Overlay closed, showing main window.")
+        print("MainView: オーバーレイが閉じられました，メインビューを表示します．")
         self.show()  # メインウィンドウを再表示
 
         # オーバーレイの参照をクリア
@@ -203,12 +205,12 @@ class MainView(QWidget):
     def _update_ui_safely(self, translated, original, source_lang):
         """UIを安全に更新"""
         try:
-            self.translated_text.setPlainText(translated if translated else "No text found.")
+            self.translated_text.setPlainText(translated if translated else "テキストがありません．")
             self.original_text.setPlainText(original)
             self.source_lang.setText(source_lang)
 
             # ボタンを元に戻す
-            self.capture_button.setText("Capture and Translate")
+            self.capture_button.setText("OCR&翻訳開始")
             self.capture_button.setEnabled(True)
 
             # ワーカースレッドをクリーンアップ
@@ -223,7 +225,7 @@ class MainView(QWidget):
         """エラーメッセージを表示"""
         try:
             # ボタンを元に戻す
-            self.capture_button.setText("Capture and Translate")
+            self.capture_button.setText("OCR&翻訳開始")
             self.capture_button.setEnabled(True)
 
             # メインウィンドウを表示
