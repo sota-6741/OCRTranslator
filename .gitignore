@@ -208,3 +208,4 @@ __marimo__/
 
 docs/
 test/
+.__pyinstaller_tess_hook.py
