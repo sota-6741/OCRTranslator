@@ -59,7 +59,6 @@ def main():
     except Exception as e:
         logger.error(f"アプリケーションの起動に失敗しました: {e}", exc_info=True)
 
-        # エラーダイアログを表示
         try:
             from PyQt6.QtWidgets import QMessageBox
             app = QApplication.instance() or QApplication(sys.argv)

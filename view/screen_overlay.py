@@ -24,7 +24,7 @@ class Overlay(QWidget):
             if primary_screen:
                 geometry = primary_screen.geometry()
                 device_pixel_ratio = primary_screen.devicePixelRatio()
-                print(f"PyQt6 Screen: geometry={geometry.width()}x{geometry.height()}, DPI ratio={device_pixel_ratio}")
+                print(f"PyQt6スクリーン情報: 幅={geometry.width()}高さ={geometry.height()}, DPI比率={device_pixel_ratio}")
 
         # 画面設定
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
@@ -56,9 +56,9 @@ class Overlay(QWidget):
                         screens = app.screens()
                         if screens:
                             device_pixel_ratio = screens[0].devicePixelRatio()
-                            print(f"Overlay: Device pixel ratio = {device_pixel_ratio}")
+                            print(f"Overlay: デバイスピクセル比 = {device_pixel_ratio}")
                     except Exception as e:
-                        print(f"Overlay: Could not get device pixel ratio: {e}")
+                        print(f"Overlay: デバイスピクセル比取得失敗: {e}")
 
                 # 物理座標に変換
                 physical_x = int(rect.x() * device_pixel_ratio)
@@ -69,11 +69,11 @@ class Overlay(QWidget):
                 rectangle_coordinate = RectangleCoordinates(physical_x, physical_y, physical_width, physical_height)
 
                 # デバッグ用：座標情報をログ出力
-                print(f"Overlay: Logical area - x={rect.x()}, y={rect.y()}, width={rect.width()}, height={rect.height()}")
-                print(f"Overlay: Physical area - x={physical_x}, y={physical_y}, width={physical_width}, height={physical_height}")
-                print(f"Overlay: Start position - x={self.start_position.x()}, y={self.start_position.y()}")
-                print(f"Overlay: Current position - x={self.current_position.x()}, y={self.current_position.y()}")
-                print(f"Overlay: MSS coordinates - {rectangle_coordinate.mss_coordinates}")
+                print(f"Overlay: 論理座標 - x={rect.x()}, y={rect.y()}, 幅={rect.width()}, 高さ={rect.height()}")
+                print(f"Overlay: 物理座標 - x={physical_x}, y={physical_y}, 幅={physical_width}, 高さ={physical_height}")
+                print(f"Overlay: 開始位置 - x={self.start_position.x()}, y={self.start_position.y()}")
+                print(f"Overlay: 現在位置 - x={self.current_position.x()}, y={self.current_position.y()}")
+                print(f"Overlay: MSS用座標 - {rectangle_coordinate.mss_coordinates}")
 
                 if self.callback:
 
@@ -86,12 +86,13 @@ class Overlay(QWidget):
             self.close()
 
     def keyPressEvent(self, event):
+        # ESCでオーバーレイを閉じる
         if event.key() == Qt.Key.Key_Escape:
             self.close()
 
     def closeEvent(self, event):
-        """Override closeEvent to emit the signal"""
-        print("Overlay: Emitting closed signal.")
+        """closeEventをオーバーライドしてシグナルを発行"""
+        print("Overlay: 閉じるシグナルを発行します．")
         self.closed.emit()
         super().closeEvent(event)
 
