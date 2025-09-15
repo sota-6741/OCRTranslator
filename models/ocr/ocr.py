@@ -33,7 +33,7 @@ class TesseractOCR(IOCR):
         # PyInstaller対応: リソースパスの取得
         base_directory = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
 
-        tesseract_bin = os.path.join(base_directory, "..", "..", "tesseract_bin")
+        tesseract_bin = os.path.join(base_directory, "..", "..", "tesseract_bin", "Tesseract-OCR")
         tessdata_directory = os.path.join(base_directory, "..", "..", "tessdata")
         system = platform.system()
         if system == "Windows":
