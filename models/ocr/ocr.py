@@ -1,5 +1,6 @@
-from typing import Dict, Any, List, Tuple, Protocol
-from dataclasses import dataclass
+from typing import Dict, Any, List, Protocol
+import os
+import platform
 import pytesseract
 import numpy as np
 
@@ -22,7 +23,26 @@ class TesseractOCR(IOCR):
         - 画像から文字を抽出
     """
     def __init__(self, language: str="eng"):
+        
         self.language = language
+        
+        self.tesseract_config = ""
+        
+        # tesseract実行ファイルを指定
+        base_directory = os.path.dirname(os.path.abspath(__file__))
+        tesseract_bin = os.path.join(base_directory, "..", "..", "tesseract_bin")
+        tessdata_directory = os.path.join(base_directory, "..", "..", "tessdata")
+        system = platform.system()
+        if system == "Windows":
+            tesseract_cmd = os.path.join(tesseract_bin, "tesseract.exe")
+        elif system == "Linux":
+            tesseract_cmd = os.path.join(tesseract_cmd, "tesseract")
+        # tessdataを指定
+        pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
+            
+        
+        self.tessdata_directory = tessdata_directory
+        self.tesseract_config += f'--tessdata-dir "{self.tessdata_directory}"'
 
     def extract_text(self, image: np.ndarray) -> str:
         """画像から文字を抽出するメソッド
@@ -33,7 +53,7 @@ class TesseractOCR(IOCR):
         # 前処理の実行
         processed_image, _ = run_pipeline(image)
 
-        return pytesseract.image_to_string(processed_image, self.language)
+        return pytesseract.image_to_string(processed_image, self.language, config=self.tesseract_config)
 
     @property
     def engine_name(self) -> str:
