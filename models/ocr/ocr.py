@@ -30,11 +30,13 @@ class TesseractOCR(IOCR):
 
         self.tesseract_config = ""
 
-        # PyInstaller の場合は _MEIPASS が使われる。そうでなければこのファイルのディレクトリを基準にする。
-        base_directory = getattr(sys, "_MEIPASS", None)
-        if base_directory is None:
-            base_directory = os.path.dirname(os.path.abspath(__file__))
-        base_dir = Path(base_directory)
+        # PyInstaller の場合は _internal が使われる。そうでなければこのファイルのディレクトリを基準にする。
+        if getattr(sys, "frozen", False):
+            exe_dir = Path(os.path.dirname(sys.executable))
+            internal_dir = Path(os.path.dirname(sys.executable))
+            base_dir = internal_dir if internal_dir.is_dir() else exe_dir
+        else:
+            base_dir = Path(os.path.dirname(os.path.abspath(__file__)))
 
         # プロジェクト内での tesseract 配置想定
         # Windows は Tesseract-OCR フォルダ（あなたの tree に合わせて）
