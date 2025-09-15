@@ -1,4 +1,5 @@
 from typing import Dict, Any, List, Protocol
+import sys
 import os
 import platform
 import pytesseract
@@ -23,24 +24,27 @@ class TesseractOCR(IOCR):
         - 画像から文字を抽出
     """
     def __init__(self, language: str="eng"):
-        
+
         self.language = language
-        
+
         self.tesseract_config = ""
-        
+
         # tesseract実行ファイルを指定
-        base_directory = os.path.dirname(os.path.abspath(__file__))
+        # PyInstaller対応: リソースパスの取得
+        base_directory = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+
         tesseract_bin = os.path.join(base_directory, "..", "..", "tesseract_bin")
         tessdata_directory = os.path.join(base_directory, "..", "..", "tessdata")
         system = platform.system()
         if system == "Windows":
             tesseract_cmd = os.path.join(tesseract_bin, "tesseract.exe")
         elif system == "Linux":
-            tesseract_cmd = os.path.join(tesseract_cmd, "tesseract")
+            tesseract_cmd = os.path.join(tesseract_bin, "tesseract")
+        else:
+            raise RuntimeError("非対応のOSです．")
         # tessdataを指定
         pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
-            
-        
+
         self.tessdata_directory = tessdata_directory
         self.tesseract_config += f'--tessdata-dir "{self.tessdata_directory}"'
 
