@@ -47,13 +47,13 @@ def assemble_tesseract_paths(tess_root: Path) -> dict:
         return {
             "tess_bin": tess_root / "linux" / "bin" / "tesseract",
             "tess_lib_dir": tess_root / "linux" / "lib",
-            "tessdata": Path(tess_root).parent / "tessdata"  # if tessdata is sibling; adjust if needed
+            "tessdata": Path(tess_root) / "linux" / "tessdata"  # if tessdata is sibling; adjust if needed
         }
     elif system == "Windows":
         return {
             "tess_bin": tess_root / "windows" / "Tesseract-OCR" / "tesseract.exe",
             "tess_lib_dir": None,
-            "tessdata": Path(tess_root) / "tessdata"  # adjust if necessary
+            "tessdata": Path(tess_root) / "windows" / "tessdata"  # adjust if necessary
         }
     else:
         raise RuntimeError(f"Unsupported platform: {system}")
