@@ -210,3 +210,5 @@ docs/
 test/
 .__pyinstaller_tess_hook.py
 OCRTranslator*.zip
+build_log.txt
+
