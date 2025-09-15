@@ -2,11 +2,13 @@ from typing import Dict, Any, List, Protocol
 import sys
 import os
 from pathlib import Path
+import subprocess
 import platform
 import pytesseract
 import numpy as np
 
 from models.ocr.preprocess import run_pipeline
+from models.utils.tesseract_locator import get_base_dir, find_tesseract_folder, assemble_tesseract_paths, configure_environment, probe_tesseract_version
 
 class IOCR(Protocol):
     """OCR インターフェース"""
@@ -24,59 +26,38 @@ class TesseractOCR(IOCR):
     主なメソッド:
         - 画像から文字を抽出
     """
-    def __init__(self, language: str="eng"):
-
+    def __init__(self, language: str="eng", tess_bin: Path | None = None, tessdata_path: Path | None = None, tesseract_config: str = "--psm 3"):
         self.language = language
+        self.tess_bin = Path(tess_bin) if tess_bin else None
+        self.tessdata_path = Path(tessdata_path) if tessdata_path else None
+        self.tesseract_config = tesseract_config
 
-        self.tesseract_config = ""
+        # pytesseract と環境変数の設定（もしファイルが与えられていれば）
+        if self.tessdata_path and self.tessdata_path.exists():
+            os.environ["TESSDATA_PREFIX"] = str(self.tessdata_path)
 
-        # PyInstaller の場合は _internal が使われる。そうでなければこのファイルのディレクトリを基準にする。
-        if getattr(sys, "frozen", False):
-            exe_dir = Path(os.path.dirname(sys.executable))
-            internal_dir = Path(os.path.dirname(sys.executable))
-            base_dir = internal_dir if internal_dir.is_dir() else exe_dir
-        else:
-            base_dir = Path(os.path.dirname(os.path.abspath(__file__)))
+        if self.tess_bin and self.tess_bin.exists():
+            # 権限確保（Linux）
+            try:
+                if platform.system() != "Windows":
+                    self.tess_bin.chmod(0o755)
+            except Exception:
+                pass
+            # pytesseract にバイナリを伝える
+            try:
+                pytesseract.pytesseract.tesseract_cmd = str(self.tess_bin)
+            except Exception:
+                pass
 
-        # プロジェクト内での tesseract 配置想定
-        # Windows は Tesseract-OCR フォルダ（あなたの tree に合わせて）
-        # Linux は tesseract_bin/linux/bin と lib を想定
-        system = platform.system()
-        if system == "Windows":
-            tesseract_bin_dir = base_dir.joinpath("..", "..", "tesseract_bin", "Tesseract-OCR")
-            tess_bin = tesseract_bin_dir.joinpath("tesseract.exe")
-            tess_lib_dir = None
-        elif system == "Linux":
-            tesseract_bin_dir = base_dir.joinpath("..", "..", "tesseract_bin", "linux", "bin")
-            tess_bin = tesseract_bin_dir.joinpath("tesseract")
-            tess_lib_dir = base_dir.joinpath("..", "..", "tesseract_bin", "linux", "lib")
-        else:
-            raise RuntimeError("非対応のOSです．")
-
-        # 絶対パスに正規化
-        tess_bin = str(tess_bin.resolve())
-        if tess_lib_dir is not None:
-            tess_lib_dir = str(tess_lib_dir.resolve())
-
-        # pytesseract に使用する実行ファイルを指定
-        pytesseract.pytesseract.tesseract_cmd = tess_bin
-
-        # tessdata のパス（同梱 tessdata を想定）
-        tessdata_directory = base_dir.joinpath("..", "..", "tessdata")
-        self.tessdata_directory = str(tessdata_directory.resolve())
-        self.tesseract_config += f' --tessdata-dir "{self.tessdata_directory}"'
-
-        # **重要**: 同梱した lib を優先するため、環境変数をセット
-        # (pytesseract が呼ぶ子プロセスはこの環境を継承します)
-        if tess_lib_dir:
-            # 既存の LD_LIBRARY_PATH を壊さない形で先頭に追加
-            prev = os.environ.get("LD_LIBRARY_PATH", "")
-            os.environ["LD_LIBRARY_PATH"] = tess_lib_dir + (":" + prev if prev else "")
-
-        # Windows の場合、もし必要なら PATH に bin を追加しておく（子プロセス用）
-        if system == "Windows":
-            prev_path = os.environ.get("PATH", "")
-            os.environ["PATH"] = os.path.dirname(tess_bin) + (os.pathsep + prev_path if prev_path else "")
+    def check_tesseract(self) -> bool:
+        """tesseract が存在して実行可能かをチェック"""
+        if not self.tess_bin or not self.tess_bin.exists():
+            return False
+        try:
+            out = subprocess.run([str(self.tess_bin), "--version"], capture_output=True, text=True, check=True)
+            return True
+        except Exception:
+            return False
 
     def extract_text(self, image: np.ndarray) -> str:
         """画像から文字を抽出するメソッド
@@ -84,10 +65,9 @@ class TesseractOCR(IOCR):
         Returns:
             str: 画像から抽出されたテキスト
         """
-        # 前処理の実行
         processed_image, _ = run_pipeline(image)
-
-        return pytesseract.image_to_string(processed_image, self.language, config=self.tesseract_config)
+        # pytesseract.image_to_string(image, lang=..., config=...)
+        return pytesseract.image_to_string(processed_image, lang=self.language, config=self.tesseract_config)
 
     @property
     def engine_name(self) -> str:
@@ -102,12 +82,37 @@ class OCRFactory:
     }
 
     @staticmethod
-    def create_ocr(engine_type: str, language: str = "eng") -> IOCR:
+    def create_ocr(engine_type: str, language: str = "eng",  base_dir_override: str | Path | None = None, require_tesseract: bool = True) -> IOCR:
         if engine_type not in OCRFactory._ocr_engines:
             raise ValueError(f"サポートされていないエンジンタイプです: {engine_type}")
 
         engine_class = OCRFactory._ocr_engines[engine_type]
-        return engine_class(language=language)
+        # tesseract 用の探索と環境設定
+        base_dir = get_base_dir(base_dir_override)
+        tess_root = find_tesseract_folder(base_dir)
+
+        if tess_root:
+            info = assemble_tesseract_paths(tess_root)
+            tess_bin = info.get("tess_bin")
+            tess_lib_dir = info.get("tess_lib_dir")
+            tessdata = info.get("tessdata", base_dir / "tessdata")
+            # 環境変数や LD_LIBRARY_PATH, pytesseract 設定を行う
+            configure_environment(tessdata, tess_lib_dir, tess_bin, set_pytesseract=True)
+
+            if require_tesseract:
+                if tess_bin is None:
+                    raise RuntimeError("tesseract_bin が None です。base_dir の設定を確認してください。")
+                ver = probe_tesseract_version(tess_bin)
+                if not ver:
+                    raise RuntimeError("tesseract が見つかったが実行できません。依存ライブラリを確認してください。")
+        else:
+            tess_bin = None
+            tessdata = None
+            if require_tesseract:
+                raise RuntimeError(f"tesseract_bin が見つかりません。base_dir={base_dir}")
+
+        # OCR インスタンス生成（最低限の情報だけ渡す）
+        return engine_class(language=language, tess_bin=tess_bin, tessdata_path=tessdata)
 
     @staticmethod
     def get_available_engines() -> List[str]:
