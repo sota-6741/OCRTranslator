@@ -1,6 +1,7 @@
 from typing import Dict, Any, List, Protocol
 import sys
 import os
+from pathlib import Path
 import platform
 import pytesseract
 import numpy as np
@@ -29,24 +30,51 @@ class TesseractOCR(IOCR):
 
         self.tesseract_config = ""
 
-        # tesseract実行ファイルを指定
-        # PyInstaller対応: リソースパスの取得
-        base_directory = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+        # PyInstaller の場合は _MEIPASS が使われる。そうでなければこのファイルのディレクトリを基準にする。
+        base_directory = getattr(sys, "_MEIPASS", None)
+        if base_directory is None:
+            base_directory = os.path.dirname(os.path.abspath(__file__))
+        base_dir = Path(base_directory)
 
-        tesseract_bin = os.path.join(base_directory, "..", "..", "tesseract_bin", "Tesseract-OCR")
-        tessdata_directory = os.path.join(base_directory, "..", "..", "tessdata")
+        # プロジェクト内での tesseract 配置想定
+        # Windows は Tesseract-OCR フォルダ（あなたの tree に合わせて）
+        # Linux は tesseract_bin/linux/bin と lib を想定
         system = platform.system()
         if system == "Windows":
-            tesseract_cmd = os.path.join(tesseract_bin, "tesseract.exe")
+            tesseract_bin_dir = base_dir.joinpath("..", "..", "tesseract_bin", "Tesseract-OCR")
+            tess_bin = tesseract_bin_dir.joinpath("tesseract.exe")
+            tess_lib_dir = None
         elif system == "Linux":
-            tesseract_cmd = os.path.join(tesseract_bin, "tesseract")
+            tesseract_bin_dir = base_dir.joinpath("..", "..", "tesseract_bin", "linux", "bin")
+            tess_bin = tesseract_bin_dir.joinpath("tesseract")
+            tess_lib_dir = base_dir.joinpath("..", "..", "tesseract_bin", "linux", "lib")
         else:
             raise RuntimeError("非対応のOSです．")
-        # tessdataを指定
-        pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
 
-        self.tessdata_directory = tessdata_directory
-        self.tesseract_config += f'--tessdata-dir "{self.tessdata_directory}"'
+        # 絶対パスに正規化
+        tess_bin = str(tess_bin.resolve())
+        if tess_lib_dir is not None:
+            tess_lib_dir = str(tess_lib_dir.resolve())
+
+        # pytesseract に使用する実行ファイルを指定
+        pytesseract.pytesseract.tesseract_cmd = tess_bin
+
+        # tessdata のパス（同梱 tessdata を想定）
+        tessdata_directory = base_dir.joinpath("..", "..", "tessdata")
+        self.tessdata_directory = str(tessdata_directory.resolve())
+        self.tesseract_config += f' --tessdata-dir "{self.tessdata_directory}"'
+
+        # **重要**: 同梱した lib を優先するため、環境変数をセット
+        # (pytesseract が呼ぶ子プロセスはこの環境を継承します)
+        if tess_lib_dir:
+            # 既存の LD_LIBRARY_PATH を壊さない形で先頭に追加
+            prev = os.environ.get("LD_LIBRARY_PATH", "")
+            os.environ["LD_LIBRARY_PATH"] = tess_lib_dir + (":" + prev if prev else "")
+
+        # Windows の場合、もし必要なら PATH に bin を追加しておく（子プロセス用）
+        if system == "Windows":
+            prev_path = os.environ.get("PATH", "")
+            os.environ["PATH"] = os.path.dirname(tess_bin) + (os.pathsep + prev_path if prev_path else "")
 
     def extract_text(self, image: np.ndarray) -> str:
         """画像から文字を抽出するメソッド
