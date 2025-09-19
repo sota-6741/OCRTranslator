@@ -1,46 +1,69 @@
+from typing import Optional
 from pathlib import Path
 import sys
 import os
 import platform
 import subprocess
 
-def get_base_dir(override: str | Path | None = None) -> Path:
+def get_base_dir(override: Optional[str | Path] = None) -> Path:
+    """
+    プロジェクトのルートディレクトリを取得する
+
+    Args:
+        override: 明示的なパス指定
+    Returns:
+        Path: プロジェクトルートのパス
+    """
     if override:
         return Path(override)
     if getattr(sys, "frozen", False):
-        # onefile は _MEIPASS、onedir は exe の親ディレクトリ
+        # PyInstaller: onefileは_MEIPASS、onedirはexeの親ディレクトリ
         if hasattr(sys, "_MEIPASS"):
             return Path(sys._MEIPASS)
         return Path(sys.executable).parent
-    return Path(__file__).resolve().parent.parent  # utils/ の一つ上 (プロジェクトルート想定)
+    # 通常: utils/ のひとつ上がルートディレクトリ
+    return Path(__file__).resolve().parent.parent
 
 def find_tesseract_folder(base_dir: Path) -> Path | None:
     """
     base_dir を起点に tesseract_bin を見つける。見つからなければ None を返す。
-    候補リストを増やせば柔軟に対応できる。
+
+    Args:
+        base_dir (Path): 探索開始ディレクトリ
+
+    Returns:
+        tesseract_binディレクトリのPathまたはNone
     """
+
     candidates = [
         base_dir / "tesseract_bin",
         base_dir / "_internal" / "tesseract_bin",
         base_dir.parent / "tesseract_bin",
         base_dir.parent.parent / "tesseract_bin",
     ]
-    for c in candidates:
-        if c.exists():
-            return c
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
 
     # 最終手段: 再帰探索（小さいツリーなら OK）
     try:
         for p in base_dir.rglob("tesseract_bin"):
             if p.is_dir():
                 return p
+    except StopIteration:
+        return None
     except Exception:
-        pass
-    return None
+        return None
 
 def assemble_tesseract_paths(tess_root: Path) -> dict:
     """
-    tess_root から OS に応じた tess_bin と tess_lib_dir を返す dict。
+    tess_rootからOSに応じたパスを返す．
+
+    Args:
+        tess_root (Path): tesseract_binのルート．
+
+    Returns:
+        dict(tess_bin, tess_lib_dir, tessdata)
     """
     system = platform.system()
     if system == "Linux":
