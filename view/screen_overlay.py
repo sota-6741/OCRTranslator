@@ -1,9 +1,9 @@
-import sys
-from PyQt6.QtWidgets import QApplication, QWidget
-from PyQt6.QtCore import Qt, QRect, QTimer, pyqtSignal, QObject
-from PyQt6.QtGui import QKeyEvent, QMouseEvent, QPainter, QPen, QColor, QScreen
-import threading
 from typing import Callable, Optional
+from PyQt6.QtWidgets import QApplication, QWidget
+from PyQt6.QtCore import Qt, QRect, pyqtSignal
+from PyQt6.QtGui import QPainter, QPen, QColor
+import threading
+
 from models.utils.capture_image import RectangleCoordinates
 
 class Overlay(QWidget):
