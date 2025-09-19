@@ -1,5 +1,4 @@
-import sys
-from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QPushButton,
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QPushButton,
                             QLabel, QFrame, QMessageBox, QTextEdit)
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt6.QtGui import QFont
@@ -50,9 +49,14 @@ class MainView(QWidget):
         """UIコンポーネントの初期化"""
         self.setWindowTitle("OCR Translator")
         self.setGeometry(100, 100, 600, 400)
+        self.setWindowFlags(
+            self.windowFlags() |
+            Qt.WindowType.WindowStaysOnTopHint
+        )
 
         # レイアウト設定
         layout = QVBoxLayout()
+        layout.setSpacing(10)
 
         # キャプチャボタン
         self.capture_button = QPushButton("OCR&翻訳開始")
