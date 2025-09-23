@@ -16,7 +16,7 @@
 
 - **画像からのテキスト抽出**: スクリーンショットや画像ファイルから高精度で文字認識
 - **ワンクリック翻訳**: 認識したテキストを即座に翻訳
-- **クロスプラットフォーム**: Windows/Linux対応（macOSは要検証）
+- **クロスプラットフォーム**: Windows/Linux対応
 
 
 ---
@@ -40,7 +40,7 @@ pip install -r requirements.txt
 ### 3. アプリ起動
 
 ```bash
-python main.py
+python3   main.py
 ```
 
 ### 4. 使い方
@@ -57,11 +57,9 @@ python main.py
 
 ---
 
-## メンテナンスと貢献者
+## メンテナンス
 
 - **メンテナ**: [sota-6741](https://github.com/sota-6741)
-- **貢献方法**: プルリクエスト歓迎！詳細は [`CONTRIBUTING.md`](CONTRIBUTING.md) を参照
-
 ---
 
 ## ディレクトリ構成
