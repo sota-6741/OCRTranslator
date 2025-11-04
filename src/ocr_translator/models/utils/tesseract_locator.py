@@ -22,17 +22,20 @@ def get_base_dir(override: Optional[str | Path] = None) -> Path:
             return Path(sys._MEIPASS)
         return Path(sys.executable).parent
     # 通常: utils/ のひとつ上がルートディレクトリ
-    return Path(__file__).resolve().parent.parent
+    return Path(__file__).resolve().parent.parent.parent.parent
 
 def find_tesseract_folder(base_dir: Path) -> Path | None:
     """
-    base_dir を起点に tesseract_bin を見つける。見つからなければ None を返す。
+    `tesseract_bin` ディレクトリを探索する。
+
+    開発環境とPyInstallerビルドの両方に対応するため、複数の候補パスを検索する。
+    固定パスで見つからない場合は、`base_dir`内を再帰的に探索する。
 
     Args:
-        base_dir (Path): 探索開始ディレクトリ
+        base_dir (Path): 探索の基準ディレクトリ。
 
     Returns:
-        tesseract_binディレクトリのPathまたはNone
+        Path | None: `tesseract_bin`のパス。見つからない場合はNone。
     """
 
     candidates = [
@@ -57,13 +60,16 @@ def find_tesseract_folder(base_dir: Path) -> Path | None:
 
 def assemble_tesseract_paths(tess_root: Path) -> dict:
     """
-    tess_rootからOSに応じたパスを返す．
+    Tesseractの関連パスをOSに応じて組み立てる。
 
     Args:
-        tess_root (Path): tesseract_binのルート．
+        tess_root (Path): `tesseract_bin` ディレクトリのパス。
 
     Returns:
-        dict(tess_bin, tess_lib_dir, tessdata)
+        dict: 以下のキーを含む辞書:
+            - "tess_bin": Tesseract実行ファイルのパス。
+            - "tess_lib_dir": Tesseractライブラリのパス (Linuxのみ)。
+            - "tessdata": `tessdata` ディレクトリのパス。
     """
     system = platform.system()
     if system == "Linux":
@@ -87,10 +93,19 @@ def configure_environment(tessdata_path: Path | None,
                           set_pytesseract: bool = True,
                           ensure_executable: bool = True) -> None:
     """
-    環境変数や実行権限のセットを行う。
-    - tessdata_path: Path to tessdata folder (may be None)
-    - tess_lib_dir: Path to native libs (Linux)
-    - tess_bin: Path to tesseract executable
+    Tesseractの実行に必要な環境変数を設定し、実行権限を付与する。
+
+    - `TESSDATA_PREFIX`: tessdataディレクトリのパスを設定する。
+    - `LD_LIBRARY_PATH`: Tesseractの共有ライブラリパスを設定する (Linuxのみ)。
+    - `pytesseract.tesseract_cmd`: `pytesseract` に実行ファイルのパスを教える。
+    - 実行権限: Tesseract実行ファイルに実行権限を付与する (非Windows)。
+
+    Args:
+        tessdata_path (Path | None): `tessdata` ディレクトリのパス。
+        tess_lib_dir (Path | None): 共有ライブラリのディレクトリパス (Linux)。
+        tess_bin (Path | None): Tesseract実行ファイルのパス。
+        set_pytesseract (bool): `pytesseract` にコマンドパスを設定するかどうか。
+        ensure_executable (bool): 実行ファイルに実行権限を付与するかどうか。
     """
     if tessdata_path:
         os.environ["TESSDATA_PREFIX"] = str(tessdata_path)

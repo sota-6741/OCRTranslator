@@ -1,5 +1,5 @@
-from models.model_facade import ModelFacade
-from models.utils.capture_image import RectangleCoordinates
+from ..models.model_facade import ModelFacade
+from ..models.utils.capture_image import RectangleCoordinates
 
 class MainPresenter:
     def __init__(self, model: ModelFacade, view=None):

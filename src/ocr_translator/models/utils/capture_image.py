@@ -6,7 +6,7 @@ import numpy as np
 import mss
 from mss.screenshot import ScreenShot
 
-from models.utils.image_converter import convert_mss_to_cv2
+from .image_converter import convert_mss_to_cv2
 
 @dataclass
 class RectangleCoordinates:

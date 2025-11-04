@@ -7,8 +7,8 @@ import platform
 import pytesseract
 import numpy as np
 
-from models.ocr.preprocess import run_pipeline
-from models.utils.tesseract_locator import get_base_dir, find_tesseract_folder, assemble_tesseract_paths, configure_environment, probe_tesseract_version
+from .preprocess import run_pipeline
+from ..utils.tesseract_locator import get_base_dir, find_tesseract_folder, assemble_tesseract_paths, configure_environment, probe_tesseract_version
 
 class IOCR(Protocol):
     """OCR インターフェース"""
@@ -27,27 +27,22 @@ class TesseractOCR(IOCR):
         - 画像から文字を抽出
     """
     def __init__(self, language: str="eng", tess_bin: Path | None = None, tessdata_path: Path | None = None, tesseract_config: str = "--psm 3"):
+        """
+        TesseractOCRエンジンのインスタンスを初期化する。
+
+        このコンストラクタは、OCR処理に必要な設定値をインスタンス変数に格納する。
+        環境変数の設定や実行ファイルの探索は行わない。
+
+        Args:
+            language (str): OCRに使用する言語。
+            tess_bin (Path | None): Tesseract実行ファイルのパス。
+            tessdata_path (Path | None): `tessdata`ディレクトリのパス。
+            tesseract_config (str): Tesseractに渡す設定オプション。
+        """
         self.language = language
         self.tess_bin = Path(tess_bin) if tess_bin else None
         self.tessdata_path = Path(tessdata_path) if tessdata_path else None
         self.tesseract_config = tesseract_config
-
-        # pytesseract と環境変数の設定（もしファイルが与えられていれば）
-        if self.tessdata_path and self.tessdata_path.exists():
-            os.environ["TESSDATA_PREFIX"] = str(self.tessdata_path)
-
-        if self.tess_bin and self.tess_bin.exists():
-            # 権限確保（Linux）
-            try:
-                if platform.system() != "Windows":
-                    self.tess_bin.chmod(0o755)
-            except Exception:
-                pass
-            # pytesseract にバイナリを伝える
-            try:
-                pytesseract.pytesseract.tesseract_cmd = str(self.tess_bin)
-            except Exception:
-                pass
 
     def check_tesseract(self) -> bool:
         """tesseract が存在して実行可能かをチェック"""
@@ -83,6 +78,25 @@ class OCRFactory:
 
     @staticmethod
     def create_ocr(engine_type: str, language: str = "eng",  base_dir_override: str | Path | None = None, require_tesseract: bool = True) -> IOCR:
+        """
+        指定されたタイプのOCRエンジンインスタンスを生成する。
+
+        Tesseractエンジンの場合、`tesseract_locator`モジュールを使い、
+        バンドルまたは開発環境からTesseractの実行ファイルを見つけ、環境設定を行う。
+
+        Args:
+            engine_type (str): 生成するOCRエンジンのタイプ ("tesseract"など)。
+            language (str): OCR処理に使用する言語。
+            base_dir_override (str | Path | None): Tesseract探索の基準ディレクトリを上書きする。
+            require_tesseract (bool): Tesseractが見つからない場合に例外を送出するかどうか。
+
+        Returns:
+            IOCR: OCRエンジンインスタンス。
+
+        Raises:
+            ValueError: サポートされていないエンジンタイプが指定された場合。
+            RuntimeError: `require_tesseract`がTrueで、Tesseractが見つからないか実行できない場合。
+        """
         if engine_type not in OCRFactory._ocr_engines:
             raise ValueError(f"サポートされていないエンジンタイプです: {engine_type}")
 

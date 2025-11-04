@@ -1,8 +1,8 @@
 from typing import Optional, List
 
-from models.ocr.ocr import OCRFactory, IOCR
-from models.translator.translator import TranslatorFactory, ITranslator, TranslationConfig
-from models.utils.capture_image import capture_with_mss, RectangleCoordinates
+from .ocr.ocr import OCRFactory, IOCR
+from .translator.translator import TranslatorFactory, ITranslator, TranslationConfig
+from .utils.capture_image import capture_with_mss, RectangleCoordinates
 
 
 class ModelFacade:

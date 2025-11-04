@@ -2,8 +2,8 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QPushButton,
                             QLabel, QFrame, QMessageBox, QTextEdit)
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt6.QtGui import QFont
-from models.utils.capture_image import RectangleCoordinates
-from view.screen_overlay import Overlay
+from ..models.utils.capture_image import RectangleCoordinates
+from .screen_overlay import Overlay
 import asyncio
 
 class AsyncWorkerThread(QThread):

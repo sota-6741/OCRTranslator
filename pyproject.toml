@@ -33,3 +33,12 @@ dependencies = [
     "typing-extensions>=4.15.0",
     "pynput>=1.7.6",
 ]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+ocrtranslator = "ocr_translator.__main__:main"

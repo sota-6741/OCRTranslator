@@ -3,7 +3,7 @@ import numpy as np
 import time
 import cv2
 
-from models.utils.image_converter import convert_cv2_to_pil
+from ..utils.image_converter import convert_cv2_to_pil
 
 def run_pipeline(image: np.ndarray) -> tuple:
     """画像前処理パイプラインを実行する関数"""

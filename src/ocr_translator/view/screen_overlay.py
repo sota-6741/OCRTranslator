@@ -4,7 +4,7 @@ from PyQt6.QtCore import Qt, QRect, pyqtSignal
 from PyQt6.QtGui import QPainter, QPen, QColor
 import threading
 
-from models.utils.capture_image import RectangleCoordinates
+from ..models.utils.capture_image import RectangleCoordinates
 
 class Overlay(QWidget):
     """スクリーンオーバーレイ"""
